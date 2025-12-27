@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:8080/api",
+  baseURL: import.meta.env.VITE_API_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -16,7 +16,7 @@ API.interceptors.request.use((req) => {
   return req;
 });
 
-// Global error handling (optional but powerful)
+// Global error handling
 API.interceptors.response.use(
   (res) => res,
   (err) => {
@@ -42,7 +42,7 @@ export const aiNextSteps = (stats) =>
   API.post("/ai/next-steps", { stats });
 
 /* =========================
-   ✅ ADD THIS ONE LINE ONLY
+   Extra API
 ========================= */
 API.deleteTest = (testId) => API.delete(`/tests/${testId}`);
 
