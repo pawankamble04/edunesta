@@ -1,25 +1,30 @@
+import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
+import API from "../../services/api";
 
 export default function AttemptTest() {
-  const questions = [
-    {
-      id: 1,
-      text: "What is JVM?",
-      options: ["Compiler", "Interpreter", "Virtual Machine", "OS"],
-    },
-    {
-      id: 2,
-      text: "Java is ___ language",
-      options: ["Low-level", "High-level", "Machine", "Assembly"],
-    },
-  ];
+  const { testId } = useParams();
+
+  // ✅ FETCHED QUESTIONS (instead of hard-coded)
+  const [questions, setQuestions] = useState([]);
 
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState({});
-  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes
+  const [timeLeft, setTimeLeft] = useState(300);
   const [submitted, setSubmitted] = useState(false);
 
-  // TIMER
+  // ✅ LOAD QUESTIONS FOR THIS TEST ONLY
+  useEffect(() => {
+    API.get(`/questions/${testId}`)
+      .then((res) => {
+        setQuestions(res.data);
+      })
+      .catch((err) => {
+        console.error("Failed to load questions", err);
+      });
+  }, [testId]);
+
+  // ⏱ TIMER (UNCHANGED)
   useEffect(() => {
     if (submitted) return;
 
@@ -37,8 +42,9 @@ export default function AttemptTest() {
     return () => clearInterval(timer);
   }, [submitted]);
 
-  const handleSelect = (index) => {
-    setAnswers({ ...answers, [current]: index });
+  // ✅ STORE ANSWER BY QUESTION ID (NOT INDEX)
+  const handleSelect = (questionId, optionIndex) => {
+    setAnswers({ ...answers, [questionId]: optionIndex });
   };
 
   const handleNext = () => {
@@ -47,8 +53,16 @@ export default function AttemptTest() {
     }
   };
 
-  const handleSubmit = () => {
-    setSubmitted(true);
+  const handleSubmit = async () => {
+    try {
+      await API.post("/submissions", {
+        testId,
+        answers,
+      });
+      setSubmitted(true);
+    } catch (err) {
+      console.error("Submission failed", err);
+    }
   };
 
   if (submitted) {
@@ -60,6 +74,10 @@ export default function AttemptTest() {
     );
   }
 
+  if (questions.length === 0) {
+    return <p className="text-center">Loading questions...</p>;
+  }
+
   const q = questions[current];
 
   return (
@@ -68,7 +86,9 @@ export default function AttemptTest() {
         <p>
           Question {current + 1} / {questions.length}
         </p>
-        <p>Time Left: {Math.floor(timeLeft / 60)}:{timeLeft % 60}</p>
+        <p>
+          Time Left: {Math.floor(timeLeft / 60)}:{timeLeft % 60}
+        </p>
       </div>
 
       <div className="bg-white p-6 rounded shadow">
@@ -79,15 +99,15 @@ export default function AttemptTest() {
             <label
               key={i}
               className={`block border p-2 rounded cursor-pointer ${
-                answers[current] === i ? "border-blue-600" : ""
+                answers[q._id] === i ? "border-blue-600" : ""
               }`}
             >
               <input
                 type="radio"
                 name="option"
                 className="mr-2"
-                checked={answers[current] === i}
-                onChange={() => handleSelect(i)}
+                checked={answers[q._id] === i}
+                onChange={() => handleSelect(q._id, i)}
               />
               {opt}
             </label>

@@ -7,12 +7,15 @@ export default function AvailableTests() {
 
   useEffect(() => {
     api
-      .get("/tests") // ✅ FIX 1: correct endpoint
+      .get("/tests/published") // ✅ FIXED (was /tests)
       .then((res) => {
         setTests(res.data);
       })
       .catch((err) => {
-        console.log("Error fetching tests:", err.response?.data || err.message);
+        console.log(
+          "Error fetching tests:",
+          err.response?.data || err.message
+        );
       });
   }, []);
 
@@ -42,12 +45,8 @@ export default function AvailableTests() {
           {tests.map((test) => (
             <tr key={test._id} className="border-t">
               <td className="p-2">{test.title}</td>
-
-              {/* ✅ FIX 2: correct field name */}
               <td>{test.durationMinutes} mins</td>
-
               <td>{test.maxAttempts}</td>
-
               <td>
                 <Link
                   to={`/student/attempt/${test._id}`}

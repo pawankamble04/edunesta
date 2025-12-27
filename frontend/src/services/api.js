@@ -41,4 +41,9 @@ export const aiWeakTopicSummary = (studentId) =>
 export const aiNextSteps = (stats) =>
   API.post("/ai/next-steps", { stats });
 
+/* =========================
+   ✅ ADD THIS ONE LINE ONLY
+========================= */
+API.deleteTest = (testId) => API.delete(`/tests/${testId}`);
+
 export default API;

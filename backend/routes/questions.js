@@ -9,10 +9,10 @@ import {
 
 const router = express.Router();
 
-// Teacher adds question
-router.post("/:testId", protect, permit("teacher"), addQuestion);
+// ✅ FIXED: frontend uses POST /questions
+router.post("/", protect, permit("teacher"), addQuestion);
 
-// Teacher / Student fetch questions
+// Fetch questions by test
 router.get("/:testId", protect, getQuestionsByTest);
 
 export default router;

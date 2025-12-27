@@ -22,6 +22,39 @@ export default function Tests() {
     fetchTests();
   }, []);
 
+  /* =========================
+     ✅ DELETE TEST
+  ========================= */
+  const handleDelete = async (testId) => {
+    const ok = window.confirm("Are you sure you want to delete this test?");
+    if (!ok) return;
+
+    try {
+      await API.delete(`/tests/${testId}`);
+      setTests((prev) => prev.filter((t) => t._id !== testId));
+    } catch (err) {
+      console.error("Delete failed", err);
+      alert("Failed to delete test");
+    }
+  };
+
+  /* =========================
+     ✅ PUBLISH TEST (NEW)
+  ========================= */
+  const handlePublish = async (testId) => {
+    try {
+      await API.post(`/tests/${testId}/publish`);
+      setTests((prev) =>
+        prev.map((t) =>
+          t._id === testId ? { ...t, isPublished: true } : t
+        )
+      );
+    } catch (err) {
+      console.error("Publish failed", err);
+      alert("Failed to publish test");
+    }
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -75,7 +108,7 @@ export default function Tests() {
                     Questions
                   </Link>
 
-                  {/* ✅ View Submissions (IMPORTANT) */}
+                  {/* Submissions */}
                   <button
                     onClick={() =>
                       navigate(`/teacher/submissions/${test._id}`)
@@ -83,6 +116,24 @@ export default function Tests() {
                     className="text-indigo-600 hover:underline"
                   >
                     Submissions
+                  </button>
+
+                  {/* ✅ Publish (only if Draft) */}
+                  {!test.isPublished && (
+                    <button
+                      onClick={() => handlePublish(test._id)}
+                      className="text-green-600 hover:underline"
+                    >
+                      Publish
+                    </button>
+                  )}
+
+                  {/* Delete */}
+                  <button
+                    onClick={() => handleDelete(test._id)}
+                    className="text-red-600 hover:underline"
+                  >
+                    Delete
                   </button>
                 </td>
               </tr>

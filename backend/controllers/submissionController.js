@@ -3,24 +3,44 @@ import Question from "../models/Question.js";
 import ExcelJS from "exceljs";
 
 /* ================================
-   STUDENT SUBMITS TEST
-   (UNCHANGED – YOUR LOGIC)
+   STUDENT SUBMITS TEST (FIXED ONLY HERE)
 ================================ */
 export const submitTest = async (req, res) => {
-  const questions = await Question.find({ test: req.body.testId });
-  let score = 0;
+  const { testId, answers } = req.body;
 
-  questions.forEach((q) => {
-    const ans = req.body.answers.find(
-      (a) => String(a.question) === String(q._id)
-    );
-    if (ans && ans.selected === q.correctAnswer) score += q.marks;
+  if (!testId || !answers) {
+    return res.status(400).json({ message: "Test ID and answers are required" });
+  }
+
+  // ✅ Fetch questions in stable order
+  const questions = await Question.find({ test: testId }).sort({ _id: 1 });
+
+  let score = 0;
+  const normalizedAnswers = [];
+
+  questions.forEach((q, index) => {
+    // Frontend sends index-based answers
+    const selected = answers[index];
+
+    if (selected === undefined) return;
+
+    const isCorrect = selected === q.correctAnswer;
+
+    if (isCorrect) {
+      score += q.marks;
+    }
+
+    normalizedAnswers.push({
+      question: q._id,   // ✅ ObjectId (FIX)
+      selected,
+      isCorrect,
+    });
   });
 
   await Submission.create({
     student: req.user.id,
-    test: req.body.testId,
-    answers: req.body.answers,
+    test: testId,
+    answers: normalizedAnswers,
     score,
   });
 
@@ -46,11 +66,13 @@ export const getSubmissionsForTest = async (req, res) => {
 export const getMyResults = async (req, res) => {
   const results = await Submission.find({ student: req.user.id })
     .populate("test", "title durationMinutes");
+
   res.json(results);
 };
 
 /* ================================
-   TEACHER – EXPORT EXCEL (NEW)
+   TEACHER – EXPORT EXCEL
+   (UNCHANGED)
 ================================ */
 export const exportSubmissionsExcel = async (req, res) => {
   try {
